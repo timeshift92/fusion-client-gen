@@ -92,7 +92,7 @@ public static class FusionClientExtension
         return fusionClient;
     }}
 }}";
-            File.WriteAllText(Path.Combine(projectDirectory, "FusionClientExtension.cs"), $"{SourceText.From(extensionTempl(string.Join("", listServices)), Encoding.UTF8)}");
+            File.WriteAllText(Path.Combine(projectDirectory, "FusionClientExtension.g.cs"), $"{SourceText.From(extensionTempl(string.Join("", listServices)), Encoding.UTF8)}");
         }
 
 
