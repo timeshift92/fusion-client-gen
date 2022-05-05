@@ -31,7 +31,7 @@ public class ServerGenerator: IGenerator
 
         [Route(""api/[controller]/[action]"")]
         [ApiController, JsonifyErrors]
-        public class {name}Controller : ControllerBase, I{name}Service
+        public partial class {name}Controller : ControllerBase, I{name}Service
         {{
             private readonly I{name}Service _{name.ToLower()};
 

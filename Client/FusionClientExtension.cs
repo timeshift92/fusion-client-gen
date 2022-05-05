@@ -10,8 +10,8 @@ public static class FusionClientExtension
 {
     public static FusionRestEaseClientBuilder AddFusionClients(this FusionRestEaseClientBuilder fusionClient)
     {
-        fusionClient.AddReplicaService<IWeatherForecastService, IWeatherForecastClientDef>();
-fusionClient.AddReplicaService<ICounterService, ICounterClientDef>();
+        fusionClient.AddReplicaService<ICounterService, ICounterClientDef>();
+fusionClient.AddReplicaService<IWeatherForecastService, IWeatherForecastClientDef>();
 
 
         return fusionClient;
