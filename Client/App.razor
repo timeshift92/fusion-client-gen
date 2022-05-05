@@ -1,0 +1,36 @@
+﻿@using Stl.Text
+@using Stl.OS
+@using Stl.Fusion.Authentication
+@implements IDisposable
+@inject BlazorCircuitContext _blazorCircuitContext
+
+<CascadingAuthState SessionId="@SessionId">
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthState>
+
+@code {
+    [Parameter]
+    public string SessionId { get; set; } = Symbol.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (OSInfo.IsWebAssembly)
+            SessionId = Session.Default.Id; // We don't want to store it anywhere in WASM or JS
+        if (!_blazorCircuitContext.IsPrerendering)
+            _blazorCircuitContext.RootComponent = this;
+    }
+
+    public void Dispose()
+        => _blazorCircuitContext.Dispose();
+}

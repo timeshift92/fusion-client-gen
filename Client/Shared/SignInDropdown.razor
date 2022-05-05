@@ -1,0 +1,43 @@
+@using Stl.Fusion.Blazor
+@using Stl.Fusion.Authentication
+@inject BlazorModeHelper _blazorModeHelper
+@inject ClientAuthHelper _clientAuthHelper
+@{
+    var usedAuthSchemas = User.Identities.Select(kv => kv.Key.Schema).ToHashSet();
+    var unusedAuthSchemas = AuthSchemas.Where(p => !usedAuthSchemas.Contains(p.Name)).ToArray();
+}
+
+@if (!User.IsAuthenticated) {
+    <div class="@CssClass">
+        <span>Sign in @Why</span>
+        @foreach (var (name, displayName) in unusedAuthSchemas) {
+            <button @onclick="@(_ => _clientAuthHelper.SignIn(name))">With @displayName</button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string CssClass { get; set; } = "";
+    [Parameter]
+    public string Why { get; set; } = "";
+    [Inject]
+    private Task<AuthState> AuthStateTask { get; set; } = null!;
+    private AuthState AuthState { get; set; } = new(new User("")); // For SSB pre-render
+    private User User => AuthState.User;
+    private (string Name, string DisplayName)[] AuthSchemas { get; set; } = Array.Empty<(string, string)>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        AuthState = await AuthStateTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) {
+            // GetSchemas requires JS interop, so it can be called only at this point
+            AuthSchemas = await _clientAuthHelper.GetSchemas();
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,90 @@
+﻿@page "_Host"
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using Uztelecom.Template.Client
+@using Uztelecom.Template.Server.Blazor
+@using Microsoft.Extensions.Options
+@using Stl.Fusion.Blazor
+@using Stl.Fusion.Server.Authentication
+@using Stl.Fusion.Server.Controllers
+@inject IOptions<BlazorHybridOptions> _hybridOptions
+@inject ServerAuthHelper _serverAuthHelper
+@inject BlazorCircuitContext _blazorCircuitContext
+
+@{
+    var blazorHybridType = _hybridOptions?.Value?.HybridType ?? BlazorHybridType.HybridOnNavigation; 
+    await _serverAuthHelper.UpdateAuthState(HttpContext);
+    var authSchemas = await _serverAuthHelper.GetSchemas(HttpContext);
+    var sessionId = _serverAuthHelper.Session.Id.Value;
+    var isServerSideBlazor = BlazorModeController.IsServerSideBlazor(HttpContext);
+    var isCloseWindowRequest = _serverAuthHelper.IsCloseWindowRequest(HttpContext, out var closeWindowFlowName);
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Fusion BlazorHybrid sample (@blazorHybridType)</title>
+    <base href="~/" />
+    <link href="css/app.css" rel="stylesheet" />
+    @*<link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />*@
+    @*<link href="Uztelecom.Template.Client.styles.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />*@
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <script src="_content/Stl.Fusion.Blazor/scripts/fusionAuth.js"></script>
+    <script>
+        window.FusionAuth.schemas = "@authSchemas";
+    </script>
+</head>
+
+<body>
+
+@if (isCloseWindowRequest) {
+    <script>
+        setTimeout(function () {
+            window.close();
+        }, 500)
+    </script>
+}
+
+@if (blazorHybridType.IsHybrid()) {
+    <server-app>
+        <component type="typeof(App)" render-mode="ServerPrerendered" param-SessionId="sessionId" />
+        <persist-component-state />
+    </server-app>
+    <wasm-app style="display: none;">
+        <component type="typeof(App)" render-mode="WebAssembly"/>
+    </wasm-app>
+}
+
+<script>
+    window.blazorHybridType = '@blazorHybridType';
+    window.getBlazorHybridType = function () { return window.blazorHybridType; }
+</script>
+
+@if (blazorHybridType == BlazorHybridType.ServerSide) {
+    <app>
+        <component type="typeof(App)" render-mode="ServerPrerendered" param-SessionId="sessionId"/>
+        <persist-component-state />
+    </app>
+    <script src="_framework/blazor.server.js"></script>
+}
+else if (blazorHybridType == BlazorHybridType.WebAssembly) {
+    <app>
+        <component type="typeof(App)" render-mode="WebAssemblyPrerendered"/>
+    </app>
+    <script src="_framework/blazor.webassembly.js"></script>
+}
+else {
+    <script src="blazor.hybrid.js"></script>
+}
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+</body>
+</html>

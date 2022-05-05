@@ -1,0 +1,52 @@
+﻿@inject IJSRuntime _js
+@inject NavigationManager _nav
+
+<span>Hybrid type: <i>@BlazorHybridType</i>, runtime: <b>@RuntimeIdentifier</b> 
+@if (BlazorHybridType.StartsWith("Hybrid")) {
+    <span> (<a class="mx-0" @onclick="SwitchMode">switch</a>)</span>
+}
+</span>
+
+@code {
+    private string RuntimeIdentifier => System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier;
+    private string BlazorHybridType { get; set; } = "";
+    private EventHandler<LocationChangedEventArgs> _locationChangedHandler;
+
+    public BlazorInfoHeader() 
+        => _locationChangedHandler = LocationChangedHandler;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) 
+            return;
+
+        BlazorHybridType = await _js.InvokeAsync<string>("getBlazorHybridType");
+        StateHasChanged();
+
+        if (BlazorHybridType.StartsWith("Hybrid") != true) 
+            return;
+        if (RuntimeIdentifier == "browser-wasm")
+            await _js.InvokeVoidAsync("blazorWasmReady");
+        _nav.LocationChanged += _locationChangedHandler;
+    }
+
+    private async void LocationChangedHandler(object? _, LocationChangedEventArgs e)
+    {
+        try {
+            var canUnsubscribe = await _js.InvokeAsync<bool>("blazorSwitchToWasm", e.Location);
+            if (canUnsubscribe)
+                _nav.LocationChanged -= _locationChangedHandler;
+        }
+        catch (TaskCanceledException) {
+            // Ignore this exception
+        }
+    }
+
+    private async Task SwitchMode()
+    {
+        if (RuntimeIdentifier == "browser-wasm")
+            _nav.NavigateTo(_nav.Uri, forceLoad: true);
+        else
+            await _js.InvokeVoidAsync("blazorSwitchToWasm", string.Empty, true);
+    }
+}

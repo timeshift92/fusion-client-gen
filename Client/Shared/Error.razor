@@ -1,0 +1,13 @@
+<div class="alert @CssClass" role="alert">
+    <strong>@Title</strong>
+    <div>@ChildContent</div>
+</div>
+
+@code {
+    [Parameter]
+    public string CssClass { get; set; } = "alert-primary";
+    [Parameter]
+    public string Title { get; set; } = "Error:";
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

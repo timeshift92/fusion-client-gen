@@ -1,0 +1,44 @@
+﻿@page "/fetchdata"
+@using System.Threading
+@using Uztelecom.Template.Shared
+@using Stl.Fusion
+@inherits Stl.Fusion.Blazor.MixedStateComponent<WeatherForecast[], DateTime>
+@inject IWeatherForecastService _weatherForecast
+
+@{
+    var state = State.ValueOrDefault ?? Array.Empty<WeatherForecast>();
+    var error = State.Error;
+}
+
+<MudGrid Class="my-3">
+    <MudItem xs="12" sm="6" md="2">
+        <MudText Typo="Typo.h5">Weather forecast</MudText>
+    </MudItem>
+</MudGrid>
+
+<WhenException Exception="error" />
+<MudTable RowsPerPage=10 FixedHeader="true" Dense="true" Striped="true" Outlined="true" Items="@state" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Date</MudTh>
+        <MudTh>Temp. (C)</MudTh>
+        <MudTh>Temp. (F)</MudTh>
+        <MudTh>Summary</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Date">@context.Date</MudTd>
+        <MudTd DataLabel="TemperatureC">@context.TemperatureC</MudTd>
+        <MudTd DataLabel="TemperatureF">@context.TemperatureF</MudTd>
+        <MudTd DataLabel="Summary">@context.Summary</MudTd>
+    </RowTemplate>
+     <PagerContent>
+        <MudTablePager RowsPerPageString="Строк на странице"/>
+    </PagerContent>
+</MudTable>
+
+@code {
+    protected override MutableState<DateTime>.Options GetMutableStateOptions()
+        => new () { InitialValue = DateTime.UtcNow };
+
+    protected override async Task<WeatherForecast[]> ComputeState(CancellationToken cancellationToken)
+        => await _weatherForecast.GetForecast(MutableState.Value, cancellationToken);
+}

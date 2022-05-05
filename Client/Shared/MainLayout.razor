@@ -1,0 +1,91 @@
+﻿@using Uztelecom.Template.Client.Shared.Theme
+@inherits LayoutComponentBase
+@*
+<div class="page">
+    <div class="sidebar">
+        <NavMenu/>
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <BlazorInfoHeader/>
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>*@
+
+
+ <MudLayout>
+            <MudAppBar Fixed="true" Dense="true" Elevation="1">
+                @if (_isDarkMode)
+                {
+                    <MudLink Href="/"><MudIcon Icon="@UtcDarkIcon.Logo" Style="height: 46px; width:100%" ViewBox="1 -13 240 48" /></MudLink>
+                    <MudIconButton Icon="@Icons.Material.Filled.Menu" Style="color: #d9d9d9" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Outlined.DarkMode" Color="Color.Primary" OnClick="ThemeToggle" />
+                }
+                else
+                {
+                    <MudLink Href="/"><MudIcon Icon="@UtcIcons.Logo" Style="height: 46px; width:100%" ViewBox="1 -13 240 48" /></MudLink>
+                    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Dark" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Outlined.WbSunny" Color="Color.Primary" OnClick="ThemeToggle" />
+                }
+                <MudMenu Icon="@Icons.Material.Outlined.Settings" Color="Color.Primary" AnchorOrigin="Origin.BottomCenter">
+                    @*<MudMenuItem OnClick="handleLogout">Выйти</MudMenuItem>*@
+                </MudMenu>
+            </MudAppBar>
+
+            <MudDrawer @bind-Open="@_drawerOpen" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true" ClipMode="DrawerClipMode.Always">
+                @*<MudLink Href="/"><MudIcon Icon="@UtcIcons.Logo" Style="height: 46px; width:100%" ViewBox="-15 -2 240 28" /></MudLink>*@
+                <MudNavMenu>
+                    <NavMenu />
+                </MudNavMenu>
+            </MudDrawer>
+
+
+            <MudMainContent>
+                <MudContainer MaxWidth="MaxWidth.False">
+                    <BlazorInfoHeader/>
+                    @Body
+                </MudContainer>
+            </MudMainContent>
+        </MudLayout>
+
+<MudThemeProvider @ref="@_mudThemeProvider" Theme="_theme" @bind-IsDarkMode="@_isDarkMode" />
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+
+@code{
+        bool _drawerOpen = true;
+
+        bool _isDarkMode;
+
+        private MudThemeProvider _mudThemeProvider;
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+                StateHasChanged();
+            }
+        }
+        void DrawerToggle()
+        {
+            _drawerOpen = !_drawerOpen;
+        }
+
+        void ThemeToggle()
+        {
+            _isDarkMode = !_isDarkMode;
+        }
+
+
+        private UtcTheme _theme = new UtcTheme();
+}
