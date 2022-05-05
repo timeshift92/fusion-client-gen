@@ -7,7 +7,7 @@
 
         [Route("api/[controller]/[action]")]
         [ApiController, JsonifyErrors]
-        public class WeatherForecastController : ControllerBase, IWeatherForecastService
+        public partial class WeatherForecastController : ControllerBase, IWeatherForecastService
         {
             private readonly IWeatherForecastService _weatherforecast;
 

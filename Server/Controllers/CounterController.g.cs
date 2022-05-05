@@ -7,7 +7,7 @@
 
         [Route("api/[controller]/[action]")]
         [ApiController, JsonifyErrors]
-        public class CounterController : ControllerBase, ICounterService
+        public partial class CounterController : ControllerBase, ICounterService
         {
             private readonly ICounterService _counter;
 
