@@ -1,0 +1,30 @@
+﻿@page "/{{LowerPluralName}}/{Id:long}"
+
+@using Stl.Fusion.Authentication
+@using Stl.Fusion.UI
+@inherits ComputedStateComponent<{{Name}}>
+@inject I{{Name}}Service {{ServiceName}}Service
+@inject UICommander Command
+@inject Session Session
+@{
+    var Model = State.LatestNonErrorValue ?? new {{Name}}() { };
+}
+
+<_Form OnSubmit="OnSubmit" Model="Model"/>
+
+
+
+@code {
+    [Parameter]
+    public long Id { get; set; }
+    
+    public void OnSubmit({{Name}} entity)
+    {
+        Command.Run(new Update{{ServiceName}}Command(Session, entity));
+    }
+
+    protected override async Task<{{Name}}> ComputeState(CancellationToken cancellationToken)
+    {
+        return await {{ServiceName}}Service.Get(Id,cancellationToken);
+    }
+}

@@ -1,0 +1,15 @@
+<Project>
+	<PropertyGroup>
+		<!-- <FusionGeneratorExe Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">"$(MSBuildThisFileDirectory)/net46/FusionGenerator.exe"</TsGenFileExe> -->
+		<!-- <FusionGeneratorExe Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' OR '$(TargetFrameworkIdentifier)' == '.NETStandard'">dotnet "$(MSBuildThisFileDirectory)/netcoreapp3.1/FusionGenerator.dll"</TsGenFileExe> -->
+		<!--The folder where the custom task will be present. It points to inside the NuGet package. -->
+		<CustomTasksFolder>$(MSBuildThisFileDirectory)..\tools\net6.0</CustomTasksFolder>
+		<CustomTasksAssembly>$(CustomTasksFolder)\$(MSBuildThisFileName).dll</CustomTasksAssembly>
+
+	</PropertyGroup>
+
+
+	<Target Name="FusionGenerator" AfterTargets="Build" >
+		<Exec Command="dotnet $(CustomTasksAssembly) $(SourceGenerator_Override)" IgnoreExitCode="false" />
+	</Target>
+</Project>

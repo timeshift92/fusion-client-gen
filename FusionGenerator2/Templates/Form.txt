@@ -1,0 +1,58 @@
+﻿@inject ISnackbar Snackbar
+@inject NavigationManager navigation
+
+<EditForm Model="@Model" OnValidSubmit="@OnValidSubmit">
+<FormContainer>
+    <Actions>
+        <MudButton Color="Color.Primary" OnClick="Back"> UNDO CHANGES </MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Dense="true" Color="Color.Primary"> SAVE </MudButton>
+    </Actions>
+    <ChildContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4">
+                        <ObjectGraphDataAnnotationsValidator />
+                        <ValidationSummary />
+                        {{~ for param in TypeParameters ~}}
+                        {{~ if param.IsPrimary ~}}
+                            <input type="hidden" @bind-value="Model.{{param.Name}}"> 
+                        {{~ else if param.Type | string.contains "string" ~}}
+                            <MudTextField  @bind-Value="Model.{{param.Name}}" Label="{{param.Name}}" Variant="Variant.Text" For="@(() => Model.{{param.Name}})" />
+                        {{~ else if ["bool","bool?"] | array.contains param.Type  ~}}
+                            <MudSwitch @bind-Checked="Model.{{param.Name}}" For="@(() => Model.{{param.Name}})" />
+                        {{~ else if ["DateTimeOffset","DateTimeOffset?","DateTime","DateTime"] | array.contains param.Type  ~}}
+                            <MudDatePicker Label="{{param.Name}}" @bind-Date="Model.{{param.Name}}" For="@(() => Model.{{param.Name}})"/>
+                        {{~ else if ["int", "int?", "double", "double?","decimal","decimal?","long","long?","float", "float?"] | array.contains param.Type  ~}}
+                            <MudNumericField   @bind-Value="Model.{{param.Name}}" Label="{{param.Name}}" Variant="Variant.Text" For="@(() => Model.{{param.Name}})" />                                
+                        {{~ else if param.IsArryRelation ~}}
+                            <_{{param.Entity}}MultiSelect   @bind-Value="Model.{{param.Name}}" Label="{{param.Name}}" For="@(() => Model.{{param.Name}})" />
+                        {{~ else if param.IsRelation ~}}
+                            <_{{param.Entity}}Select  @bind-Value="Model.{{param.Name}}" Label="{{param.Name}}"  For="@(() => Model.{{param.Name}})"/>
+                        {{~ else ~}}
+                        {{~ end ~}}
+                        {{~ end ~}}
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </ChildContent>
+</FormContainer>
+</EditForm>
+@code {
+    [Parameter]
+    public {{Name}} Model { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<{{Name}}> OnSubmit { get; set; }
+
+
+     private async void OnValidSubmit(EditContext context)
+    {
+        StateHasChanged();
+        Snackbar.Add("Success", Severity.Success);
+        await OnSubmit.InvokeAsync(Model);
+        navigation.NavigateTo("/{{LowerPluralName}}");
+    }
+    private void Back(){
+         navigation.NavigateTo("/{{LowerPluralName}}");
+    }
+}

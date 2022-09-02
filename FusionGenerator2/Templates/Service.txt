@@ -1,0 +1,175 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Stl.Fusion;
+using {{Rootnamespace}}.Shared;
+using Stl.Fusion.EntityFramework;
+using System.ComponentModel.DataAnnotations;
+using Stl.Async;
+using System.Reactive;
+namespace {{Rootnamespace}}.Services;
+
+public class {{ServiceName}}Service : I{{Name}}Service
+{
+    #region Initialize
+    private readonly DbHub<AppDbContext> _dbHub;
+
+    
+    public {{ServiceName}}Service(DbHub<AppDbContext> dbHub)
+    {
+        _dbHub = dbHub;
+    }
+    #endregion
+    #region Queries
+    [ComputeMethod]
+    public async virtual Task<TableResponse<{{Name}}>> GetAll(TableOptions options, CancellationToken cancellationToken = default)
+    {
+        await GetAnyTail();
+        var dbContext = _dbHub.CreateDbContext();
+        await using var _ = dbContext.ConfigureAwait(false);
+        var {{LowerName}} = from s in dbContext.{{PluralName}} select s;
+
+        if (!String.IsNullOrEmpty(options.Search))
+        {
+            {{LowerName}} = {{LowerName}}.Where(s => 
+            {{~ for param in StringProperties ~}}
+                {{~ if for.index == 0  ~}}
+                s.{{param.Name}}.Contains(options.Search)
+                {{~ else ~}}
+                || s.{{param.Name}}.Contains(options.Search)
+                {{~ end ~}}
+            {{~ end ~}}
+            );
+        }
+        switch (options.SortLabel)
+        {
+            {{~ for param in TypeParameters ~}}
+            case "{{param.Name}}_field":
+                if(options.SortDirection != 0)
+                {{LowerName}} = options.SortDirection == 2 ?   {{LowerName}}.OrderBy(o => o.{{param.Name}}) : {{LowerName}}.OrderByDescending(o => o.{{param.Name}});
+                break;
+            {{~ end ~}}
+        }
+        {{~ if  Relations != null ~}}
+        {{~ for rel in Relations ~}}
+        {{LowerName}} = {{LowerName}}.Include(x => x.{{rel.Name}});
+        {{~ end ~}}
+        {{~ end ~}}
+
+        var count = await {{LowerName}}.AsNoTracking().CountAsync();
+        var items = await {{LowerName}}.AsNoTracking().Skip((options.Page > 0 ? options.Page - 1 : 0) * options.PageSize).Take(options.PageSize).ToListAsync();
+        return new TableResponse<{{Name}}>(){ Items = items, TotalItems = count };
+    }
+
+    [ComputeMethod]
+    public async virtual Task<{{Name}}> Get({{Primary.Type}} Id, CancellationToken cancellationToken = default)
+    {
+        var dbContext = _dbHub.CreateDbContext();
+        await using var _ = dbContext.ConfigureAwait(false);
+        var {{LowerName}} = await dbContext.{{PluralName}}
+        {{~ if  Relations != null ~}}
+        {{~ for rel in Relations ~}}
+        .Include(x => x.{{rel.Name}})
+        {{~ end ~}}
+        {{~ end ~}}
+        .FirstOrDefaultAsync(x => x.Id == Id);
+        if ({{LowerName}} == null) throw  new ValidationException("{{Name}} Not Found");
+        return {{LowerName}} ;
+    }
+    #endregion
+    #region Mutations
+    public async virtual Task PostCreate(Create{{ServiceName}}Command command, CancellationToken cancellationToken = default)
+    {
+        if (Computed.IsInvalidating())
+        {
+            _ = await GetAnyTail();
+            return;
+        }
+
+        await using var dbContext = await _dbHub.CreateCommandDbContext(cancellationToken);
+        var {{LowerName}} = command.Entity;
+
+        {{~ if Relations != null ~}}
+        {{~ for relation in Relations ~}}
+        {{~ if relation.IsRelation && !relation.IsArryRelation ~}}
+        if(command.Entity.{{relation.Name}} != null)
+        {{LowerName}}.{{relation.Name}} = dbContext.{{relation.PluralType}}
+        .First(x => x.Id == command.Entity.{{relation.Name}}.Id);
+        {{~ else if relation.IsRelation && relation.IsArryRelation ~}}
+        if(command.Entity.{{relation.Name}} != null)
+        {{LowerName}}.{{relation.Name}} = dbContext.{{relation.PluralType}}
+        .Where(x => command.Entity.{{relation.Name}}.Select(tt => tt.Id).ToList().Contains(x.Id)).ToList();
+        {{~ end ~}}
+        {{~ end ~}}
+        {{~ end ~}}
+
+        
+        {{~ for props in SimpleProperties ~}}
+        {{LowerName}}.{{props.Name}} = command.Entity.{{props.Name}};
+        {{~ end~}}
+        
+        dbContext.Update({{LowerName}});
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+    }
+
+
+    public async virtual Task Delete(Delete{{ServiceName}}Command command, CancellationToken cancellationToken = default)
+    {
+        if (Computed.IsInvalidating())
+        {
+            _ = await GetAnyTail();
+            return;
+        }
+        await using var dbContext = await _dbHub.CreateCommandDbContext(cancellationToken);
+        var {{LowerName}} = await dbContext.{{PluralName}}
+        {{~ for relation in Relations ~}}
+        .Include(x=>x.{{relation.Name}})
+        {{~ end ~}}
+        .FirstOrDefaultAsync(x => x.Id == command.Id);
+        if ({{LowerName}} == null) throw  new ValidationException("{{Name}} Not Found");
+        dbContext.Remove({{LowerName}});
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+
+    public async virtual Task PutUpdate(Update{{ServiceName}}Command command, CancellationToken cancellationToken = default)
+    {
+        if (Computed.IsInvalidating())
+        {
+            _ = await GetAnyTail();
+            return;
+        }
+        await using var dbContext = await _dbHub.CreateCommandDbContext(cancellationToken);
+        var {{LowerName}} = await dbContext.{{PluralName}}
+        {{~ for relation in Relations ~}}
+        .Include(x=>x.{{relation.Name}})
+        {{~ end ~}}
+        .FirstOrDefaultAsync(x => x.Id == command.Entity!.Id);
+
+        if ({{LowerName}} == null) throw  new ValidationException("{{Name}} Not Found"); 
+
+        {{~ if Relations != null ~}}
+        {{~ for relation in Relations ~}}
+        {{~ if relation.IsRelation && !relation.IsArryRelation ~}}
+        if(command.Entity.{{relation.Name}} != null)
+        {{LowerName}}.{{relation.Name}} = dbContext.{{relation.PluralType}}
+        .First(x => x.Id == command.Entity.{{relation.Name}}.Id);
+        {{~ else if relation.IsRelation && relation.IsArryRelation ~}}
+        if(command.Entity.{{relation.Name}} != null)
+        {{LowerName}}.{{relation.Name}}  = dbContext.{{relation.PluralType}}
+        .Where(x => command.Entity.{{relation.Name}}.Select(tt => tt.Id).ToList().Contains(x.Id)).ToList();
+        {{~ end ~}}
+        {{~ end ~}}
+        {{~ end ~}}
+
+        
+        {{~ for props in SimpleProperties ~}}
+        {{LowerName}}.{{props.Name}} = command.Entity.{{props.Name}};
+        {{~ end~}}
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+    #endregion
+
+    [ComputeMethod]
+    protected virtual Task<Unit> GetAnyTail() => TaskExt.UnitTask;
+}

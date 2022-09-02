@@ -1,0 +1,55 @@
+@using System.Linq.Expressions
+@inherits MixedStateComponent<TableResponse<{{Name}}>,string>
+@inject I{{Name}}Service {{ServiceName}}Service
+
+@{
+    var data = State.ValueOrDefault ?? new TableResponse<{{Name}}>();
+}
+
+<MudAutocomplete T="{{Name}}" 
+                 @attributes="Attributes"
+                 Value="Value"
+                 Immediate="true"
+                 For="For"
+                 ValueChanged="UpdateValue" ToStringFunc="(x)=>x?.{{FirstStringProp.Name}}" SearchFunc="Search"  />
+
+@code {
+    [Parameter]
+    public {{Name}}? Value { get; set; }
+    [Parameter]
+    public EventCallback<{{Name}}> ValueChanged { get; set; }
+
+    [Parameter]
+    public Expression<Func<{{Name}}>>? For { get; set; }
+    
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? Attributes { get; set; }
+
+    async Task UpdateValue({{Name}} value)
+    {
+        Value = value;
+
+        await ValueChanged.InvokeAsync(Value);
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    protected override MutableState<string?>.Options GetMutableStateOptions()
+        => new() { InitialValue = null };
+
+    protected override async Task<TableResponse<{{Name}}>> ComputeState(CancellationToken cancellationToken)
+    {
+        return await {{ServiceName}}Service.GetAll(new() { Search = MutableState.Value }, cancellationToken);
+    }
+
+    private async Task<IEnumerable<{{Name}}>> Search(string value)
+    {
+        MutableState.Set(value);
+        MutableState.Invalidate();
+
+        await Task.Delay(30);
+
+        return  State?.ValueOrDefault?.Items?.ToList() ?? new List<{{Name}}>();
+    }
+
+
+}

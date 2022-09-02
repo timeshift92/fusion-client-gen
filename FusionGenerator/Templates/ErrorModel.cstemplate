@@ -1,0 +1,7 @@
+namespace FusionGenerator.Models
+{
+    public partial class ErrorModel
+    {
+       //Error
+    }
+}

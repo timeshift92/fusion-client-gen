@@ -1,0 +1,17 @@
+﻿@page "/{{LowerPluralName}}/create"
+
+@using Stl.Fusion.Authentication
+@using Stl.Fusion.UI
+@inject I{{Name}}Service {{Name}}Service
+@inject UICommander Command
+@inject Session Session
+
+<_Form OnSubmit="OnSubmit"/>
+
+@code {
+
+    public void OnSubmit({{Name}} entity)
+    {
+        Command.Run(new Create{{ServiceName}}Command(Session, entity));
+    }
+}

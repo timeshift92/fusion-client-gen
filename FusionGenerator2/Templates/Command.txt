@@ -1,0 +1,7 @@
+﻿using Stl.Fusion.Authentication;
+
+namespace {{Rootnamespace}}.Shared;
+
+public record Create{{ServiceName}}Command(Session Session,{{Name}} Entity):ISessionCommand<{{Name}}> { }
+public record Update{{ServiceName}}Command(Session Session,{{Name}} Entity):ISessionCommand<{{Name}}> { }
+public record Delete{{ServiceName}}Command(Session Session,{{Primary.Type}} Id):ISessionCommand<{{Name}}> { }

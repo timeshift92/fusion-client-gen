@@ -1,0 +1,153 @@
+﻿@page  "/{{LowerPluralName}}" 
+@inject UICommander commander
+@inject Session Session
+@inject NavigationManager navigation
+@inject ISnackbar Snackbar
+@inject IDialogService _dialogService
+@inject I{{Name}}Service {{ServiceName}}Service
+@inherits MixedStateComponent<TableResponse<{{Name}}>,TableOptions>
+@{
+    var error=State.Error;
+    Items =State.ValueOrDefault;
+    
+    if(State.ValueOrDefault != null) table?.ReloadServerData();
+ }
+
+<ListContainer>
+    <Actions>
+        <MudLink Href="/{{LowerPluralName}}/create">
+            <MudButton Style="float:right;" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">Add {{Name}}</MudButton>
+        </MudLink>
+    </Actions>
+    <ChildContent>
+        @if (Items == null)
+        {
+            <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+        }
+        else
+        {
+            <MudPaper Class="pa-8" Elevation="1" Width="100%">
+                <MudPaper Class="d-flex flex-row-reverse flex-wrap flex-grow-1 gap-4 mb-4" Elevation="0">
+                    <div style="width: 300px;">
+                        <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Label="Search" Variant="Variant.Outlined" Adornment="Adornment.End"
+                                      AdornmentIcon="@Icons.Filled.Search" AdornmentColor="Color.Primary"/>
+                    </div>
+                </MudPaper>
+                <MudTable ServerData="@(new Func<TableState, Task<TableData<{{~ Name ~}}>>>(ServerReload))" CurrentPage=page @ref="table" Hover="true" SortLabel="Sort By" Elevation="0" FixedHeader="true" FixedFooter="true" Height="60vh">
+                    <HeaderContent>
+                          {{~ for param in TypeParameters ~}}
+                              <MudTh>
+                                  <MudTableSortLabel SortLabel="{{param.Name}}_field" T="{{Name}}"> {{param.Name}}</MudTableSortLabel>
+                              </MudTh>
+                          {{~ end ~}}
+                          <MudTh>Action</MudTh>
+                          </HeaderContent>
+                          <RowTemplate>
+                          {{~ for param in TypeParameters ~}}
+                                {{~ if param.IsRelation  && !param.IsArryRelation ~}}
+                                <MudTd DataLabel="{{param.Name}}.{{param.GetFirstPropertyName}}">@context.{{param.Name}}?.{{param.GetFirstPropertyName}}</MudTd>
+                                {{~ else if param.IsRelation  && param.IsArryRelation ~}}
+                                <MudTd DataLabel={{param.Name}}.{{param.GetFirstPropertyName}}>
+                                @string.Join(" ",context.{{param.Name}}?.Select(x=> x.{{param.GetFirstPropertyName}})?.ToList() ?? new List<string>() )
+                                </MudTd>
+                                {{~ else ~}}
+                                <MudTd DataLabel="{{param.Name}}">@context.{{param.Name}}</MudTd>
+                                {{~ end ~}}
+                          {{~ end ~}}
+                       
+                        <MudTd T="{{Name}}" CellClass="d-flex justify-end">
+                            <MudLink Href=@($"/{{LowerPluralName}}/{context.Id}")>
+                                <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small"/>
+                            </MudLink>
+                            <MudFab @onclick=@(()=>Delete(@context.Id)) Color=Color.Secondary Icon=@Icons.Material.Filled.Delete Size=Size.Small IconSize=Size.Small /> 
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText>No matching records found</MudText>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudText>Loading...</MudText>
+                    </LoadingContent>
+                    <PagerContent>
+                        <MudTablePager/>
+                    </PagerContent>
+                </MudTable>
+            </MudPaper>
+        }
+    </ChildContent>
+</ListContainer>
+
+@code {
+    private TableResponse<{{Name}}>? Items ;
+    private MudTable<{{Name}}>? table;
+     public int page=0;
+    private string? searchString;
+    DateTime? date = DateTime.Today;
+
+    protected override MutableState<TableOptions>.Options GetMutableStateOptions()
+        => new() { InitialValue = new TableOptions() { Page = 1, PageSize = 15, SortLabel = "{{Primary.Name}}_field", SortDirection = 1 } };
+
+    protected override async Task<TableResponse<{{Name}}>> ComputeState(CancellationToken cancellationToken = default)
+    {
+        var queryParams = new Dictionary<string, string>
+        {
+            ["page"] = (page+1).ToString()
+        };
+        navigation.NavigateTo(QueryHelpers.AddQueryString("meters", queryParams));
+        return await {{ServiceName}}Service.GetAll(MutableState.Value,cancellationToken);
+    }
+
+    protected override void OnInitialized()
+    {
+
+        var uri = navigation.ToAbsoluteUri(navigation.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("page", out var _initialCount))
+        {
+            page = Convert.ToInt32(_initialCount)-1;
+        }
+
+        base.OnInitialized();
+    }
+
+    private async Task Delete({{Primary.Type}} Id, CancellationToken cancellationToken = default)
+    {
+        bool? result = await _dialogService.ShowMessageBox(
+        "Delete Confirmation",
+        "Deleting can not be undone!",
+        yesText: "Delete!", cancelText: "Cancel");
+        if (result ?? false)
+        {
+            await commander.Run(new Delete{{ServiceName}}Command(Session, Id));
+            navigation.NavigateTo("/{{LowerPluralName}}");
+            Snackbar.Add("Success", Severity.Success);
+        }
+    }
+
+    private async Task<TableData<{{Name}}>> ServerReload(TableState state)
+    {
+
+        if (MutableState.Value.PageSize != state.PageSize
+            || MutableState.Value.SortLabel != state.SortLabel
+            || MutableState.Value.Page != state.Page
+            || MutableState.Value.SortDirection != (int)state.SortDirection
+            || MutableState.Value.Search != searchString)
+        {
+            MutableState.Value.Page = state.Page;
+            MutableState.Value.PageSize = state.PageSize;
+            MutableState.Value.SortLabel = state.SortLabel;
+            MutableState.Value.SortDirection = (int)state.SortDirection;
+            MutableState.Value.Search = searchString;
+            MutableState.Invalidate();
+        }
+        await Task.Delay(30);
+        return new TableData<{{Name}}>() { TotalItems = State.ValueOrDefault!.TotalItems, Items = State.ValueOrDefault!.Items };
+        
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table.ReloadServerData();
+    }
+
+}

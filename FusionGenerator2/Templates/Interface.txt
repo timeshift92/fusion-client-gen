@@ -1,0 +1,17 @@
+﻿using Stl.CommandR.Configuration;
+using Stl.Fusion;
+
+namespace {{Rootnamespace}}.Shared;
+public interface I{{Name}}Service
+{
+    [ComputeMethod]
+    Task<TableResponse<{{Name}}>> GetAll(TableOptions options, CancellationToken cancellationToken = default);
+    [ComputeMethod]
+    Task<{{Name}}> Get({{Primary.Type}} Id, CancellationToken cancellationToken = default);
+    [CommandHandler]
+    Task PostCreate(Create{{ServiceName}}Command command, CancellationToken cancellationToken = default);
+    [CommandHandler]
+    Task PutUpdate(Update{{ServiceName}}Command command, CancellationToken cancellationToken = default);
+    [CommandHandler]
+    Task Delete(Delete{{ServiceName}}Command command, CancellationToken cancellationToken = default);
+}

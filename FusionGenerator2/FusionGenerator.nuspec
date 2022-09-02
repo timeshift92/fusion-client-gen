@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package>
+	<metadata>
+		<id>FusionGenerator</id>
+		<title>FusionGenerator</title>
+		<version>0.0.1.45</version>
+		<authors>UTC</authors>
+		<owners>UTC</owners>
+		<requireLicenseAcceptance>true</requireLicenseAcceptance>
+		<summary>FusionGenerator ~ Does a thing autmatically when built</summary>
+		<description>FusionGenerator runs a console after compilation</description>
+		<license type="expression">MIT</license>
+		<tags>build</tags>
+	</metadata>
+
+	<files>
+		<file src="build/FusionGenerator.targets" target="build/FusionGenerator.targets" />
+		<file src="bin\Release\net6.0\FusionGenerator.dll" target="tools/net6.0/FusionGenerator.dll" />
+		<file src="bin\Release\net6.0\Stl.Fusion.dll" target="tools/net6.0/Stl.Fusion.dll" />
+		<file src="bin\Release\net6.0\Stl.Fusion.Blazor.dll" target="tools/net6.0/Stl.Fusion.Blazor.dll" />
+		<file src="bin\Release\net6.0\Stl.Fusion.Client.dll" target="tools/net6.0/Stl.Fusion.Client.dll" />
+		<file src="bin\Release\net6.0\Stl.dll" target="tools/net6.0/Stl.dll" />
+		<file src="bin\Release\net6.0\Stl.CommandR.dll" target="tools/net6.0/Stl.CommandR.dll" />
+		<file src="bin\Release\net6.0\Newtonsoft.Json.dll" target="tools/net6.0/Newtonsoft.Json.dll" />
+		<file src="bin\Release\net6.0\Scriban.dll" target="tools/net6.0/Scriban.dll" />
+		<file src="bin\Release\net6.0\FusionGenerator.runtimeconfig.json" target="tools/net6.0/FusionGenerator.runtimeconfig.json" />
+		<file src="Templates\*" target="content" />
+	</files>
+</package>

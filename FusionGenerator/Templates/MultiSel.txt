@@ -1,0 +1,44 @@
+@using System.Linq.Expressions
+@inherits ComputedStateComponent<TableResponse<{{Name}}>>
+@inject I{{Name}}Service {{ServiceName}}Service
+
+@{
+    var data = State.ValueOrDefault ?? new TableResponse<{{Name}}>();
+}
+
+
+<MudSelect T="{{Name}}" @attributes="Attributes" MultiSelection="true" SelectedValues="Value" ToStringFunc="(x)=>x?.{{FirstStringProp.Name}}" SelectedValuesChanged="(vl) => UpdateValue(vl.ToList())">
+    @foreach (var item in data.Items)
+    {
+        <MudSelectItem T="{{Name}}" Value="@item">@item.Name</MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter]
+    public List<{{Name}}>? Value { get; set; }
+    [Parameter]
+    public EventCallback<List<{{Name}}>> ValueChanged { get; set; }
+
+    [Parameter]
+    public Expression<Func<List<{{Name}}>>>? For { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? Attributes { get; set; }
+
+    async Task UpdateValue(List<{{Name}}> value)
+    {
+        Value = value;
+
+        await ValueChanged.InvokeAsync(Value);
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+
+    protected override async Task<TableResponse<{{Name}}>> ComputeState(CancellationToken cancellationToken)
+    {
+        return await {{ServiceName}}Service.GetAll(new() { PageSize = 100 }, cancellationToken);
+    }
+
+
+}

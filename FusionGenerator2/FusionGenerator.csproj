@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<GeneratePackageOnBuild Condition="'$(Configuration)'=='RELEASE'">true</GeneratePackageOnBuild>
+		<Title>FusionGenerator</Title>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageId>FusionGenerator</PackageId>
+		<NuspecFile>FusionGenerator.nuspec</NuspecFile>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="FusionGenerator.nuspec" />
+		<None Remove="Templates\Command.txt" />
+		<None Remove="Templates\Create.txt" />
+		<None Remove="Templates\ErrorModel.cstemplate" />
+		<None Remove="Templates\Form.txt" />
+		<None Remove="Templates\Interface.txt" />
+		<None Remove="Templates\List.txt" />
+		<None Remove="Templates\MultiSel.txt" />
+		<None Remove="Templates\Select.txt" />
+		<None Remove="Templates\Service.txt" />
+		<None Remove="Templates\Update.txt" />
+		<Content Include="FusionGenerator.nuspec" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Templates\Command.txt" />
+	  <EmbeddedResource Include="Templates\Create.txt" />
+	  <EmbeddedResource Include="Templates\ErrorModel.cstemplate" />
+	  <EmbeddedResource Include="Templates\Form.txt" />
+	  <EmbeddedResource Include="Templates\Interface.txt" />
+	  <EmbeddedResource Include="Templates\List.txt" />
+	  <EmbeddedResource Include="Templates\MultiSel.txt" />
+	  <EmbeddedResource Include="Templates\Select.txt" />
+	  <EmbeddedResource Include="Templates\Service.txt" />
+	  <EmbeddedResource Include="Templates\Update.txt" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Scriban" Version="5.5.0" />
+		<PackageReference Include="Stl.Fusion.Client" Version="3.5.37" />
+		<PackageReference Include="Stl.Fusion.Blazor" Version="3.5.37" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Resource Include="Templates\Command.txt" />
+	  <Resource Include="Templates\Create.txt" />
+	  <Resource Include="Templates\ErrorModel.cstemplate" />
+	  <Resource Include="Templates\Form.txt" />
+	  <Resource Include="Templates\Interface.txt" />
+	  <Resource Include="Templates\List.txt" />
+	  <Resource Include="Templates\MultiSel.txt" />
+	  <Resource Include="Templates\Select.txt" />
+	  <Resource Include="Templates\Service.txt" />
+	  <Resource Include="Templates\Update.txt" />
+	</ItemGroup>
+	
+	
+	<ItemGroup>
+	  <None Update="Shared.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+</Project>
